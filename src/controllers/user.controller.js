@@ -4,6 +4,14 @@ import { User} from "../models/user.model.js"
 import {uploadOnCloudinary} from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
 
+
+const generateAccessAndRefreshTokens = async(userId)=>{
+try {
+    
+} catch (error) {
+    
+}
+}
 const registerUser = asyncHandler( async (req, res) => {
     // get user details from frontend
     // validation - not empty
@@ -35,8 +43,13 @@ const registerUser = asyncHandler( async (req, res) => {
     console.log(req.files);
     const avatarLocalPath = req.files?.avatar[0]?.path;
     
-    const coverImageLocalPath = req.files?.coverImage[0]?.path
+    //const coverImageLocalPath = req.files?.coverImage[0]?.path
     
+    let coverImageLocalPath;
+    if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImageLocalPath.length>0){
+        coverImageLocalPath = req.files.coverImage[0].path
+    }
+
     if (!avatarLocalPath) {
         throw new ApiError(400, "Avatar file is required")
     }
@@ -73,7 +86,36 @@ const registerUser = asyncHandler( async (req, res) => {
 } )
 
 
+const loginUser = asyncHandler(async (req, res)=>{
+    // req body -> data
+    // username or email 
+    // find the user 
+    //password check
+    // access and request token 
+    // send cookie
+
+    const {email, username, password } = req.body
+    if(!username || !email)
+        {
+            throw new ApiError(400, "username or email is required"); 
+        }
+
+       const user = await User.findOne({
+            $or:[{username},{email}]
+        })
+        if(!user)
+            {
+                throw new ApiError(404, "user does not exist"); 
+            }
+     const isPasswordValid = await user.isPasswordCorrect(password)
+     if(!isPasswordValid)
+        {
+            throw new ApiError(401, "INVALID USER CREDENTIALS"); 
+        }
+
+})
 export {
+    loginUser,
     registerUser,
     
 }
