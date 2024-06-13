@@ -7,9 +7,17 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 
 const generateAccessAndRefreshTokens = async(userId)=>{
 try {
-    
+    const user = await User.findById(userId)
+    const accessToken = user.generateAccessToken()
+    const refreshToken = user.generateRefreshToken()
+
+    user.refreshToken = refreshToken
+
+    await user.save({validateBeforeSave: false})
+    return {accessToken, refreshToken}
+
 } catch (error) {
-    
+    throw new ApiError(500, "Something went wrong while generating access and refresh tokens")
 }
 }
 const registerUser = asyncHandler( async (req, res) => {
@@ -101,6 +109,7 @@ const loginUser = asyncHandler(async (req, res)=>{
         }
 
        const user = await User.findOne({
+        // advance syntax : mongoDB operator
             $or:[{username},{email}]
         })
         if(!user)
@@ -113,7 +122,37 @@ const loginUser = asyncHandler(async (req, res)=>{
             throw new ApiError(401, "INVALID USER CREDENTIALS"); 
         }
 
+    const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id)
+    // generated Access And Refresh Tokens
+
+   const loggedInUser = await User.findById(user._id).
+   select("-password -refreshToken") // eliminate fields 
+
+    const options = {
+        httpOnly:true,
+        secure:true
+    }
+    return res
+    .status[200]
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken",refreshToken, options)
+    .json(
+        new ApiResponse(
+            200,
+            {
+                user : loggedInUser, accessToken, refreshToken
+            },
+            "User Logged IN Successfully"
+        )
+    )
 })
+
+ const logoutUser = await asyncHandler(async(req, res )=>{
+    // user can only logout their own account not anyone else
+    // hence use middleware that also uses in images
+    
+
+ })
 export {
     loginUser,
     registerUser,
