@@ -1,7 +1,8 @@
 
 import jwt from "jsonwebtoken"
 import { User } from "../models/user.model"
-export const verifyJWT = asyncHandler(async(req, res, next)=>{
+export const verifyJWT = asyncHandler(async(req, _ , next)=>{
+  // "_" is used in Production for unused Variables
   try {
      const token =  req.cookies?.accessToken || req.header("Autorization")?.replace("Bearer","")
       if(!token){

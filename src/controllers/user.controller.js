@@ -147,14 +147,36 @@ const loginUser = asyncHandler(async (req, res)=>{
     )
 })
 
- const logoutUser = await asyncHandler(async(req, res )=>{
+ const logoutUser =  asyncHandler(async(req, res )=>{
     // user can only logout their own account not anyone else
     // hence use middleware that also uses in images
-    
+    await User.findByIdAndUpdate(
+    req.user._id,
+    {
+        $set:{
+            refreshToken:undefined,
+        },
+    },
+        {
+
+        }
+
+)
+       const options={
+        httpOnly:true,
+        secure:true
+       }
+
+       return res
+       .status()
+       .clearCookie("accessToken")
+       .clearCookie("refreshToken")
+       .json(new ApiResponse(200, {}, "success ! User Logged Out") )
+
 
  })
 export {
     loginUser,
     registerUser,
-    
+    logoutUser,
 }
