@@ -3,23 +3,27 @@ import {ApiError} from "../utils/ApiError.js"
 import { User} from "../models/user.model.js"
 import {uploadOnCloudinary} from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
+import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 
-const generateAccessAndRefreshTokens = async(userId)=>{
-try {
-    const user = await User.findById(userId)
-    const accessToken = user.generateAccessToken()
-    const refreshToken = user.generateRefreshToken()
+const generateAccessAndRefereshTokens = async(userId) =>{
+    try {
+        const user = await User.findById(userId)
+        const accessToken = user.generateAccessToken()
+        const refreshToken = user.generateRefreshToken()
 
-    user.refreshToken = refreshToken
+        user.refreshToken = refreshToken
+        await user.save({ validateBeforeSave: false })
 
-    await user.save({validateBeforeSave: false})
-    return {accessToken, refreshToken}
+        return {accessToken, refreshToken}
 
-} catch (error) {
-    throw new ApiError(500, "Something went wrong while generating access and refresh tokens")
+
+    } catch (error) {
+        throw new ApiError(500, "Something went wrong while generating referesh and access token")
+    }
 }
-}
+
 const registerUser = asyncHandler( async (req, res) => {
     // get user details from frontend
     // validation - not empty
@@ -48,15 +52,16 @@ const registerUser = asyncHandler( async (req, res) => {
     if (existedUser) {
         throw new ApiError(409, "User with email or username already exists")
     }
-    console.log(req.files);
+    //console.log(req.files);
+
     const avatarLocalPath = req.files?.avatar[0]?.path;
-    
-    //const coverImageLocalPath = req.files?.coverImage[0]?.path
-    
+    //const coverImageLocalPath = req.files?.coverImage[0]?.path;
+
     let coverImageLocalPath;
-    if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImageLocalPath.length>0){
+    if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
         coverImageLocalPath = req.files.coverImage[0].path
     }
+    
 
     if (!avatarLocalPath) {
         throw new ApiError(400, "Avatar file is required")
@@ -93,7 +98,6 @@ const registerUser = asyncHandler( async (req, res) => {
 
 } )
 
-
 const loginUser = asyncHandler(async (req, res)=>{
     // req body -> data
     // username or email 
@@ -103,7 +107,9 @@ const loginUser = asyncHandler(async (req, res)=>{
     // send cookie
 
     const {email, username, password } = req.body
-    if(!username || !email)
+    console.log(email);
+
+    if(!username && !email)
         {
             throw new ApiError(400, "username or email is required"); 
         }
@@ -122,7 +128,7 @@ const loginUser = asyncHandler(async (req, res)=>{
             throw new ApiError(401, "INVALID USER CREDENTIALS"); 
         }
 
-    const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id)
+    const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user._id)
     // generated Access And Refresh Tokens
 
    const loggedInUser = await User.findById(user._id).
@@ -133,7 +139,7 @@ const loginUser = asyncHandler(async (req, res)=>{
         secure:true
     }
     return res
-    .status[200]
+    .status(200)
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken",refreshToken, options)
     .json(
@@ -153,12 +159,12 @@ const loginUser = asyncHandler(async (req, res)=>{
     await User.findByIdAndUpdate(
     req.user._id,
     {
-        $set:{
-            refreshToken:undefined,
-        },
+        $unset:{
+            refreshToken:1
+        }
     },
         {
-
+            new:true
         }
 
 )
@@ -168,10 +174,10 @@ const loginUser = asyncHandler(async (req, res)=>{
        }
 
        return res
-       .status()
+       .status(200)
        .clearCookie("accessToken", options)
        .clearCookie("refreshToken", options)
-       .json(new ApiResponse(200, {}, "success !!!! User Logged Out") )
+       .json(new ApiResponse(200, {}, "okay !!!! User Logged Out") )
 
 
  })
