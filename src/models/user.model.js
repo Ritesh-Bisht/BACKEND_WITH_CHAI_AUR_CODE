@@ -58,25 +58,29 @@ userSchema.pre("save", async function (next) {
     this.password = await bcrypt.hash(this.password, 10)
     next()
 })
-
+// user defined functions : password encryption
 userSchema.methods.isPasswordCorrect = async function(password){
     return await bcrypt.compare(password, this.password)
 }
 
 userSchema.methods.generateAccessToken = function(){
-    return jwt.sign(
+    return jwt.sign( // takes parametres
+        // 1. payload
         {
             _id: this._id,
             email: this.email,
             username: this.username,
             fullName: this.fullName
         },
+        //
         process.env.ACCESS_TOKEN_SECRET,
+        // object
         {
             expiresIn: process.env.ACCESS_TOKEN_EXPIRY
         }
     )
 }
+// same as access token but with less information
 userSchema.methods.generateRefreshToken = function(){
     return jwt.sign(
         {
@@ -85,7 +89,7 @@ userSchema.methods.generateRefreshToken = function(){
         },
         process.env.REFRESH_TOKEN_SECRET,
         {
-            expiresIn: process.env.REFRESH_TOKEN_EXPIRY
+            expiresIn: process.env.REFRESH_TOKEN_EXPIRY // 10 days
         }
     )
 }

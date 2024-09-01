@@ -24,23 +24,26 @@ const generateAccessAndRefereshTokens = async(userId) =>{
     }
 }
 
+// Most Improtant syntax 
 const registerUser = asyncHandler( async (req, res) => {
-    // get user details from frontend
-    // validation - not empty
-    // check if user already exists: username, email
-    // check for images, check for avatar
-    // upload them to cloudinary, avatar
-    // create user object - create entry in db
-    // remove password and refresh token field from response
-    // check for user creation
-    // return res
+    // 1. get user details from frontend
+    // 2. validation - not empty
+    // 3. check if user already exists: username, email
+    // 4. check for images, check for avatar
+    // 5. upload them to cloudinary, avatar and get img path from cloudinary
+    // 6. create user object - create entry in database 
+    // 7. remove password and refresh token field from response
+    // 8. check for user creation
+    // 9. return response or error
 
 
     const {fullName, email, username, password } = req.body
-    //console.log("email: ", email);
-
+    console.log("email: ", email);
+    console.log("username: ",username);
     if (
+        // Advanced Syntax
         [fullName, email, username, password].some((field) => field?.trim() === "")
+        //
     ) {
         throw new ApiError(400, "All fields are required")
     }

@@ -1,6 +1,5 @@
 //require('dotenv').config({path:'./env'})
 
-// require('dotenv').config({path: './env'})
 import dotenv from "dotenv"
 import connectDB from "./db/index.js";
 import {app} from './app.js'
@@ -15,5 +14,5 @@ connectDB()
     });
 })
 .catch((e) => {
-    console.log("Mongo DB CONN FAILED !!! ", e);
+    console.log(" !!! Mongo DB Conn FAILED !!! ", e);
 })
