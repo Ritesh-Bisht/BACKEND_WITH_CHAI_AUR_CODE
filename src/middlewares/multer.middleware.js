@@ -1,5 +1,6 @@
 import multer from "multer";
 
+// storage middleware creation
 const storage = multer.diskStorage({
     destination: function (req, file, cb) { 
       // req contains json data , but not file 
@@ -10,11 +11,12 @@ const storage = multer.diskStorage({
     
     
     filename: function (req, file, cb) {
-      
+      console.log(file) 
       cb(null, file.originalname)
+      // can also add suffix instead of original name
     }
   })
   
 export const upload = multer({ 
-    storage, 
+    storage // export storage middleware
 })

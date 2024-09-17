@@ -9,6 +9,7 @@ const router = Router()
 router.route("/register").post(
     //1. Middleware before Execution
        
+    
     // single for 1 field , array for multiple files in 1 field
     upload.fields([
         {

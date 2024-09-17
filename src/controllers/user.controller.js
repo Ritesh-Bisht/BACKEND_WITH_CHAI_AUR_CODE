@@ -1,4 +1,5 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
+// using asyncHandler as we are using try catch or promises many times 
 import {ApiError} from "../utils/ApiError.js"
 import { User} from "../models/user.model.js"
 import {uploadOnCloudinary} from "../utils/cloudinary.js"
@@ -36,7 +37,7 @@ const registerUser = asyncHandler( async (req, res) => {
     // 8. check for user creation
     // 9. return response or error
 
-
+    // 1. getting user details
     const {fullName, email, username, password } = req.body
     console.log("email: ", email);
     console.log("username: ",username);

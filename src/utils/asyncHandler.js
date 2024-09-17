@@ -1,4 +1,5 @@
 const asyncHandler = (requestHandler) => {
+    // return as a function (higher order function)
     return (req, res, next) => {
         Promise
         .resolve(requestHandler(req, res, next))
