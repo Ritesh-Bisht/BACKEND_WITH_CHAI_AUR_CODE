@@ -20,7 +20,7 @@ const videoSchema = new Schema(
             required: true
         },
         duration: {
-            type: Number, 
+            type: Number, // from cloudinary
             required: true
         },
         views: {
@@ -32,8 +32,8 @@ const videoSchema = new Schema(
             default: true
         },
         owner: {
-            type: Schema.Types.ObjectId,
-            ref: "User"
+            type: Schema.Types.ObjectId, 
+            ref: "User" // this has to be available in the database
         }
 
     }, 
@@ -42,6 +42,6 @@ const videoSchema = new Schema(
     }
 )
 
-videoSchema.plugin(mongooseAggregatePaginate)
+videoSchema.plugin(mongooseAggregatePaginate) // we can add user defined plugin
 
 export const Video = mongoose.model("Video", videoSchema)
