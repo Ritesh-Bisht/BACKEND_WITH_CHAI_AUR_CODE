@@ -41,23 +41,30 @@ const registerUser = asyncHandler( async (req, res) => {
     const {fullName, email, username, password } = req.body
     console.log("email: ", email);
     console.log("username: ",username);
+    // 2. validation - non empty
     if (
-        // Advanced Syntax
-        [fullName, email, username, password].some((field) => field?.trim() === "")
+        // Advanced Syntax instead of if else multiple times
+            [fullName, email, username, password].some((field) => field?.trim() === "")
         //
     ) {
         throw new ApiError(400, "All fields are required")
     }
-
+    
+    // 
+    // import User from mongoose
+    // then it will find 
     const existedUser = await User.findOne({
         $or: [{ username }, { email }]
+        // return if any one match
     })
-
+    
+    // 3. CHECK if user already exists
     if (existedUser) {
         throw new ApiError(409, "User with email or username already exists")
     }
     //console.log(req.files);
 
+    // 4. CHECK for images and avatar 
     const avatarLocalPath = req.files?.avatar[0]?.path;
     //const coverImageLocalPath = req.files?.coverImage[0]?.path;
 
@@ -71,6 +78,8 @@ const registerUser = asyncHandler( async (req, res) => {
         throw new ApiError(400, "Avatar file is required")
     }
 
+    // 5. UPLOAD on cloudinary
+    // import uploadOnCloudinary from file
     const avatar = await uploadOnCloudinary(avatarLocalPath)
     const coverImage = await uploadOnCloudinary(coverImageLocalPath)
 
@@ -78,6 +87,7 @@ const registerUser = asyncHandler( async (req, res) => {
         throw new ApiError(400, "Avatar file is required")
     }
    
+    // 7. CREATE user's database entry
 
     const user = await User.create({
         fullName,
