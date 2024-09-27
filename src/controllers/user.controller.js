@@ -39,8 +39,9 @@ const registerUser = asyncHandler( async (req, res) => {
 
     // 1. getting user details
     const {fullName, email, username, password } = req.body
-    console.log("email: ", email);
-    console.log("username: ",username);
+    console.log(" req.body : ",req.body)
+    console.log(" email: ", email);
+    console.log(" username: ",username);
     // 2. validation - non empty
     if (
         // Advanced Syntax instead of if else multiple times
@@ -62,12 +63,13 @@ const registerUser = asyncHandler( async (req, res) => {
     if (existedUser) {
         throw new ApiError(409, "User with email or username already exists")
     }
-    //console.log(req.files);
+    console.log(req.files);
 
     // 4. CHECK for images and avatar 
     const avatarLocalPath = req.files?.avatar[0]?.path;
+    
     //const coverImageLocalPath = req.files?.coverImage[0]?.path;
-
+       // same as below // classic else if coz above is giving error
     let coverImageLocalPath;
     if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
         coverImageLocalPath = req.files.coverImage[0].path
@@ -92,20 +94,25 @@ const registerUser = asyncHandler( async (req, res) => {
     const user = await User.create({
         fullName,
         avatar: avatar.url,
-        coverImage: coverImage?.url || "",
+        coverImage: coverImage?.url || "", // this can be empty
         email, 
         password,
         username: username.toLowerCase()
     })
 
-    const createdUser = await User.findById(user._id).select(
+    // _id is added to every entry in database 
+    const createdUser = await User.findById(user._id)
+    .select( // inside this we write what to exclude like -password -refreshToken etc
         "-password -refreshToken"
     )
 
+    // now check for server error
     if (!createdUser) {
         throw new ApiError(500, "Something went wrong while registering the user")
     }
-
+    // otherwise everything is fine
+    // import ApiResponse and use proper Api response
+    // 8. RETURN RESPONSE
     return res.status(201).json(
         new ApiResponse(200, createdUser, "User registered Successfully")
     )
