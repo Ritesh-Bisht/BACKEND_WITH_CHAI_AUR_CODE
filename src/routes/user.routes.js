@@ -30,7 +30,7 @@ router.route("/login").post(loginUser)
 
     // SECURED ROUTES
     router.route("/logout").post(verifyJWT, logoutUser)
-    //here using verifyJWT middleware 
+    //here using middleware verifyJWT
 
     router.route("/refresh-token").post(refreshAccessToken);
 

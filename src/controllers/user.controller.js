@@ -13,11 +13,14 @@ const generateAccessAndRefereshTokens = async(userId) =>{
         const user = await User.findById(userId)
         const accessToken = user.generateAccessToken()
         const refreshToken = user.generateRefreshToken()
-
+        
+        // Access Refresh Token in Database
         user.refreshToken = refreshToken
+
+        // save without validation of password 
         await user.save({ validateBeforeSave: false })
 
-        return {accessToken, refreshToken}
+        return {accessToken, refreshToken} // return both as object
 
 
     } catch (error) {
@@ -120,66 +123,83 @@ const registerUser = asyncHandler( async (req, res) => {
 } )
 
 const loginUser = asyncHandler(async (req, res)=>{
-    // req body -> data
-    // username or email 
-    // find the user 
-    //password check
-    // access and request token 
-    // send cookie
+    // 1. get data from the req body 
+    // 2. username or email 
+    // 3. find the user 
+    // 4. if user exists password check
+    // 5. if password is correct generate access and request token 
+    // 6. send tokens in secure cookie
 
+    // step 1. get data from the req body
     const {email, username, password } = req.body
     console.log(email);
 
-    if(!username && !email)
+    // step 2.
+    if(!username && !email) // both username and email required
         {
             throw new ApiError(400, "username or email is required"); 
         }
 
+    // step 3. 
        const user = await User.findOne({
         // advance syntax : mongoDB operator
-            $or:[{username},{email}]
+            $or:[{username},{email}] 
+            // if one of them either username or email is present the find 
         })
+
+    // step 4. if user exists or not 
         if(!user)
             {
                 throw new ApiError(404, "user does not exist"); 
             }
+
+    // step 5. if password is correct generate access and request token 
      const isPasswordValid = await user.isPasswordCorrect(password)
      if(!isPasswordValid)
         {
-            throw new ApiError(401, "INVALID USER CREDENTIALS"); 
+            throw new ApiError(401, " Sorry INVALID USER CREDENTIALS"); 
         }
-
+    
     const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user._id)
     // generated Access And Refresh Tokens
 
+    //  step 6. send tokens in secure cookie
    const loggedInUser = await User.findById(user._id).
-   select("-password -refreshToken") // eliminate fields 
+   select("-password -refreshToken") 
+   // eliminate unnecessary fields 
 
     const options = {
-        httpOnly:true,
-        secure:true
+        httpOnly:true, // 
+        secure:true // by default only from server can be modified not from frontend
     }
     return res
     .status(200)
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken",refreshToken, options)
     .json(
-        new ApiResponse(
-            200,
-            {
+        new ApiResponse( 
+            // ApiResponse
+            200, // this.statusCode
+            {    // this.data
                 user : loggedInUser, accessToken, refreshToken
+                // apart from cookies sendind both token 
+                /* Maybe the user wants to save it in local storage 
+                 or he is developing a mobile application, that is why we are sending separate cookies.
+                */
             },
-            "User Logged IN Successfully"
+            "User Logged IN Successfully" // this.message
+
         )
     )
 })
 
  const logoutUser =  asyncHandler(async(req, res )=>{
     // user can only logout their own account not anyone else
-    // hence use middleware that also uses in images
+    // hence use middleware same as we were using in images
     await User.findByIdAndUpdate(
-    req.user._id,
+    req.user._id, // here user is coming from middleware verifyJWT 
     {
+        // mongoDB operator like $set $unset
         $unset:{
             refreshToken:1
         }
