@@ -61,7 +61,7 @@ userSchema.pre("save", async function (next) {
 // user defined functions : password encryption
 userSchema.methods.isPasswordCorrect = async function(password){
     return await bcrypt.compare(password, this.password) // return true or false
-    // password (clear text)  , this.password (from database)
+    // password (clear text)  , this.password (from req.body)
     // .methods also has access to the object like .pre
 }
 

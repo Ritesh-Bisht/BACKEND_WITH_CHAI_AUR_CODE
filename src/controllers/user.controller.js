@@ -226,10 +226,12 @@ const loginUser = asyncHandler(async (req, res)=>{
 const refreshAccessToken = asyncHandler(async (req, res) => {
         const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
     
+        // if refresh token not found
         if (!incomingRefreshToken) {
-            throw new ApiError(401, "unauthorized request")
+            throw new ApiError(401, "unauthorized request refresh token not found ")
         }
-    
+
+
         try {
             const decodedToken = jwt.verify(
                 incomingRefreshToken,
@@ -238,31 +240,33 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         
             const user = await User.findById(decodedToken?._id)
         
+            // refresh token is available but suspicious or Invalid 
             if (!user) {
                 throw new ApiError(401, "Invalid refresh token")
             }
-        
+         // chech for refresh token from req is same as user 
             if (incomingRefreshToken !== user?.refreshToken) {
                 throw new ApiError(401, "Refresh token is expired or used")
                 
             }
         
+            // now generate access and refresh token 
             const options = {
                 httpOnly: true,
                 secure: true
             }
         
-            const {accessToken, newRefreshToken} = await generateAccessAndRefereshTokens(user._id)
+            const {newAccessToken, newRefreshToken} = await generateAccessAndRefereshTokens(user._id)
         
             return res
             .status(200)
-            .cookie("accessToken", accessToken, options)
+            .cookie("accessToken", newAccessToken, options)
             .cookie("refreshToken", newRefreshToken, options)
             .json(
                 new ApiResponse(
                     200, 
-                    {accessToken, refreshToken: newRefreshToken},
-                    "Access token refreshed"
+                    {newAccessToken, refreshToken: newRefreshToken},
+                    "Access token refreshed successfully "
                 )
             )
         } catch (error) {
@@ -275,59 +279,61 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 const changeCurrentPassword = asyncHandler(async(req, res) => {
     const {oldPassword, newPassword} = req.body
 
-    
-
     const user = await User.findById(req.user?._id)
     const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
 
+    // if old password is incorrect
     if (!isPasswordCorrect) {
         throw new ApiError(400, "Invalid old password")
     }
-
+    // if old password is correct
     user.password = newPassword
     await user.save({validateBeforeSave: false})
 
     return res
     .status(200)
-    .json(new ApiResponse(200, {}, "Password changed successfully"))
+    .json(new ApiResponse(200, {}, " congrats Password changed successfully"))
 })
 
 
 const getCurrentUser = asyncHandler(async(req, res) => {
-    return res
-    .status(200)
-    .json(new ApiResponse(
+    return res.status(200).json
+    ( new ApiResponse(
         200,
         req.user,
-        "User fetched successfully"
+        " current User fetched successfully"
     ))
 })
 
 const updateAccountDetails = asyncHandler(async(req, res) => {
+    // get details from that are going to be updated
     const {fullName, email} = req.body
 
     if (!fullName || !email) {
         throw new ApiError(400, "All fields are required")
     }
 
+    // takes 3 things id, {}, {}
     const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set: {
-                fullName,
-                email: email
+                fullName, // same as fullName: fullName
+                email: email // same as email
             }
         },
         {new: true}
         
-    ).select("-password")
+    ).select("-password") // remove password field
 
     return res
     .status(200)
-    .json(new ApiResponse(200, user, "Account details updated successfully"))
+    .json(new ApiResponse(200, user, " your Account details updated successfully"))
 });
 
+// updation of files require multer 
 const updateUserAvatar = asyncHandler(async(req, res) => {
+    // get the file from req.files with the help of multer middleware 
     const avatarLocalPath = req.file?.path
 
     if (!avatarLocalPath) {
@@ -339,10 +345,10 @@ const updateUserAvatar = asyncHandler(async(req, res) => {
     const avatar = await uploadOnCloudinary(avatarLocalPath)
 
     if (!avatar.url) {
-        throw new ApiError(400, "Error while uploading on avatar")
+        throw new ApiError(400, "Error while uploading avatar on cloudinary")
         
     }
-
+    // same as updateAccountDetails in above fn 
     const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
@@ -373,7 +379,7 @@ const updateUserCoverImage = asyncHandler(async(req, res) => {
     const coverImage = await uploadOnCloudinary(coverImageLocalPath)
 
     if (!coverImage.url) {
-        throw new ApiError(400, "Error while uploading on avatar")
+        throw new ApiError(400, "Error while uploading coverImage on cloudinary")
         
     }
 
