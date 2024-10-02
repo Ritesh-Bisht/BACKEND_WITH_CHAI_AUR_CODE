@@ -1,15 +1,25 @@
 import { Router } from "express";
-import { loginUser, logoutUser, registerUser, refreshAccessToken, changeCurrentPassword, getCurrentUser, updateAccountDetails, updateUserAvatar, updateUserCoverImage, getUserChannelProfile, getWatchHistory } from "../controllers/user.controller.js";
+import { loginUser, 
+         logoutUser, 
+         registerUser, 
+         refreshAccessToken, 
+         changeCurrentPassword, 
+         getCurrentUser, 
+         updateAccountDetails, 
+         updateUserAvatar, 
+         updateUserCoverImage, 
+         getUserChannelProfile, 
+         getWatchHistory 
+} from "../controllers/user.controller.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router()
 
-router.route("/register").post(
+    router.route("/register")
+    .post(
     //1. Middleware before Execution
-       
-    
     // single for 1 field , array for multiple files in 1 field
     upload.fields([
         {
@@ -24,9 +34,9 @@ router.route("/register").post(
     
     //2. Execution 
     registerUser
-    )
+    );
 
-router.route("/login").post(loginUser)
+    router.route("/login").post(loginUser)
 
     // SECURED ROUTES
     router.route("/logout").post(verifyJWT, logoutUser)
